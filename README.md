@@ -1,7 +1,7 @@
 # Discord-Bot-Project
 ## Версия 1.0.0
 + [Добавление когов](https://github.com/Artur929488/Discord-Bot-Project/tree/main/bot/cogs)
-  + [tools](Artur929488/Discord-Bot-Project/cogs/tools.py)
+  + [tools](https://github.com/Artur929488/Discord-Bot-Project/blob/main/bot/cogs/tools.py)
 + Фикс багов
 + Улучьшение команд
   + info user
