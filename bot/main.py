@@ -181,126 +181,6 @@ async def invite(ctx):
     await ctx.reply(embed=embed, view=view)
 
 #-------------------------------------------------------------------------------------------------------------
-#-------------------------------------------------инфо--------------------------------------------------------
-
-@client.group(invoke_without_command = True, aliases=["information"])
-async def info(ctx):
-    await ctx.message.reply(f"{ctx.author.name}, тип информации не указан. Пожалуйста, вызовить команду помощи (`{bot_prefix}help info`)")
-
-#----------------------------------------------инфо-о-боте----------------------------------------------------
-
-@info.command()
-async def bot(ctx: commands.Context):
-    #battery = psutil.sensors_battery()
-    #percentbat = int(battery.percent)
-    cpu = psutil.cpu_percent()
-    mem = psutil.virtual_memory()
-    percentmem = int(mem.percent)
-
-    embed = discord.Embed(
-        color = bot_color,
-        title=f"Информация о {bot_name}",
-        description=f"Последняя актульная информация о {bot_name} представлена ниже",
-        )
-    embed.add_field(name="Основная информация:", value=f"Создатель:\n`{bot_owner}`\n Версия: `{bot_version}`\nЯП: `Python`")
-    embed.add_field(name="Система:", value=f"Пинг: `{round (client.latency * 1000)}` ms\n Система:\n`Windows 10`\nCPU: `{cpu}%`\n Память: `{percentmem}%`")
-    embed.add_field(name="Статисктика:", value="Серверов: `"+ str(len(client.guilds))+"`\n Пользователей:\n`"+ str(len(client.users)) +"`")
-    #embed.add_field(name="Сервер поддержки:", value=f"[Сервер поддержки]({bot_support})")
-    #embed.add_field(name="Добавь бота на сервер:", value=f"[Добавь бота на сервер]({bot_add})")
-    embed.set_thumbnail(url = client.user.avatar.url)
-    embed.timestamp = datetime.datetime.utcnow()
-    embed.set_footer(text=f'{ctx.author.name} \u200b')
-    await ctx.reply(embed=embed)
-
-#---------------------------------------------инфо-о-сервере--------------------------------------------------
-    
-@info.command()
-@commands.guild_only()
-async def server(ctx):
-    locale.setlocale(locale.LC_ALL, 'ru_RU')
-    name = str(ctx.guild.name)
-    description = str(ctx.guild.description)
-
-    owner = str(ctx.guild.owner)
-    #create_time = (ctx.guild.created_at.strftime(date_format))
-    epoch_created_at = int(dt.mktime(ctx.guild.created_at.timetuple()))
-    id = str(ctx.guild.id)
-    #region = str(ctx.guild_region)
-    memberCount = str(ctx.guild.member_count)
-
-    textCount = len(ctx.guild.text_channels)
-    voiceCount = len(ctx.guild.voice_channels)
-    channelsCount = len(ctx.guild.text_channels + ctx.guild.voice_channels)
-
-    icon = str(ctx.guild.icon.url)
-
-    embed = discord.Embed(
-        title=name,
-        description=description,
-        color=bot_color
-    )
-    embed.set_thumbnail(url=icon)
-    embed.add_field(name="Создатель:", value=owner, inline=True)
-    embed.add_field(name="Создан:", value=f"<t:{epoch_created_at}>(<t:{epoch_created_at}:R>)", inline=True)
-    embed.add_field(name="ID сервера:", value=id, inline=True)
-    #embed.add_field(name="Регион сервера:", value=region, inline=True)
-    embed.add_field(name="Уастников:", value=memberCount, inline=True)
-    embed.add_field(name="Текстовых чатов:", value=textCount, inline=True)
-    embed.add_field(name="Голосовых чатов:", value=voiceCount, inline=True)
-    embed.add_field(name="Всего чатов:", value=channelsCount, inline=True)
-    if ctx.guild.banner:
-        embed.add_image(url=ctx.guild.banner.url)
-    embed.timestamp = datetime.datetime.utcnow()
-    embed.set_footer(text=f'{ctx.author.name} \u200b')
-    await ctx.reply(embed=embed)
-
-#--------------------------------------инфо-о-пользователе--------------------------------------------------
-    
-@info.command()
-async def user(ctx, *, user: discord.Member = None): # b'\xfc'
-    if user is None:
-        user = ctx.author      
-    locale.setlocale(locale.LC_ALL, 'ru_RU')
-    embed = discord.Embed(color=bot_color)
-    embed.set_thumbnail(url=user.avatar.url)#name=str(user),
-    t = user.status
-    if t == discord.Status.online:
-        d = "<:status_online:973547805069180948> В сети"
-
-    t = user.status
-    if t == discord.Status.offline:
-        d = "<:status_offline:973548082111336458> Не в сети"
-
-    t = user.status
-    if t == discord.Status.idle:
-        d = "<:status_idle:973547681337184356> Не активен"
-
-    t = user.status
-    if t == discord.Status.dnd:
-        d = "<:status_dnd:973547976142258237>  Не беспокоить"
-    embed.add_field(name="Активность:", value=d)
-    embed.add_field(name="Статус:", value=user.activity)
-    members = sorted(ctx.guild.members, key=lambda m: m.joined_at)
-    embed.add_field(name="Позиция", value=str(members.index(user)+1))
-    epoch_joined_at = int(dt.mktime(user.joined_at.timetuple()))
-    epoch_created_at = int(dt.mktime(user.created_at.timetuple()))
-    embed.add_field(name="Присоединился", value=f"<t:{epoch_joined_at}>(<t:{epoch_joined_at}:R>)")
-    embed.add_field(name="Зарегистрирован", value=f"<t:{epoch_created_at}>(<t:{epoch_created_at}:R>)")
-    if len(user.roles) > 1:
-        role_string = ' '.join([r.mention for r in user.roles][1:])
-        embed.add_field(name="Роли [{}]".format(len(user.roles)-1), value=role_string, inline=False)
-    perm_string = ', '.join([str(p[0]).replace("_", " ").title() for p in user.guild_permissions if p[1]])
-    embed.add_field(name="Разрешения на сервере", value=perm_string, inline=False)
-    #embed.set_image(user.banner_url)
-    embed.timestamp = datetime.datetime.utcnow()
-    if user.banner:
-        member = await client.fetch_user(user.id)
-        banner_url = member.banner.url
-        embed.set_image(url=banner_url)
-    embed.set_footer(text='ID: ' + str(user.id) + f'\n\n{ctx.author.name} \u200b')
-    return await ctx.reply(embed=embed)
-
-#-------------------------------------------------------------------------------------------------------------
 #----------------------------------------добавить-бота-на-сервер----------------------------------------------
 
 @client.command()
@@ -311,7 +191,8 @@ async def addbot(ctx):
         description=f"\n\n[Добавить бота на сервер]({bot_add}) ",
         )
   embed.set_thumbnail(url = client.user.avatar.url)
-  embed.set_footer(text = f'{bot_owner} © {year} Все права защищены')
+  embed.timestamp = datetime.datetime.utcnow()
+  embed.set_footer(text=f'{ctx.author.name} \u200b')
   await ctx.reply(embed=embed)
 
 #-------------------------------------------------------------------------------------------------------------
