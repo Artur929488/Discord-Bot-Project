@@ -1,1 +1,1 @@
-
+worker: python botrun.py
