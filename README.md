@@ -25,3 +25,7 @@ $ git clone https://github.com/Rapptz/discord.py
 $ cd discord.py
 $ python3 -m pip install -U .[voice]
 ```
+### Установка FFMPEG
+Для работы музыки в боте "play", нужно установить 3 программы "ffmpeg.exe", "ffplay.exe", "ffprobe.exe"
+Скачать их можно с официального сайта https://ffmpeg.org
+После установки их нужно поместить в папку [bot](https://github.com/Artur929488/Discord-Bot-Project/blob/main/bot)
