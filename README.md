@@ -27,6 +27,12 @@ $ cd discord.py
 $ python3 -m pip install -U .[voice]
 ```
 #
+### Токен в start.bat
+Зайдите в [start.bat](https://github.com/Artur929488/Discord-Bot-Project/blob/main/start.bat) и впишите в "set TOKEN=" ваш токен
+#
+### Настройка config.py
+Зайдите в [config.py](https://github.com/Artur929488/Discord-Bot-Project/blob/main/bot/config.py) и настройте всё так как там указано
+#
 ### Установка FFMPEG
 Для работы музыки в боте "play", нужно установить 3 программы "ffmpeg.exe", "ffplay.exe", "ffprobe.exe"
 Скачать их можно с официального сайта https://ffmpeg.org
