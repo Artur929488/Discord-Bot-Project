@@ -6,7 +6,7 @@ import discord, time
 
 settings = {
     'bot_name': 'Arona',
-    'token': 'ODMxODAzMTE2MDcxOTQ0MjEy.YHajBQ.nQEishYYihfRVj9zrDFDItulmBo',
+    'token': 'Ваш токен',
     'app_id': 831803116071944212,
     'client_id': 831803116071944212,
     'perm_scope': 1375060978903, # Permission Integer.
