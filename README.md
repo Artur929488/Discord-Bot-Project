@@ -1,4 +1,5 @@
 # Discord-Bot-Project
+![image](https://img.shields.io/discord/974027749679321138?label=Discord%20Support)
 ## Версия 1.0.0 Beta
 + [Добавление когов](https://github.com/Artur929488/Discord-Bot-Project/tree/main/bot/cogs)
   + [tools](https://github.com/Artur929488/Discord-Bot-Project/blob/main/bot/cogs/tools.py)
