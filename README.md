@@ -1,14 +1,8 @@
 # Discord-Bot-Project
 ![image](https://img.shields.io/discord/974027749679321138?label=Discord%20Support)
-## Версия 1.0.0 Beta
-+ [Добавление когов](https://github.com/Artur929488/Discord-Bot-Project/tree/main/bot/cogs)
-  + [tools](https://github.com/Artur929488/Discord-Bot-Project/blob/main/bot/cogs/tools.py)
-+ Фикс багов
-+ Улучьшение команд
-  + info user
-  + info server
-  + info bot
-+ Переход с discord 1.7.3 на 2.0.0
+## Версия 1.0.1 
++ Убраны все коги
++ Мощьный фикс багов
 #
 ## Начало работы
 ### Установка python 3.8
