@@ -36,7 +36,6 @@ from youtube_dl import YoutubeDL
 from asyncio import sleep
 import youtube_dl
 from async_timeout import timeout
-from discord.ext import commands
 import httpx
 from bs4 import BeautifulSoup
 from functools import partial
@@ -69,7 +68,6 @@ import psutil
 import traceback
 from dotenv import load_dotenv
 import subprocess
-from pypresence import Presence
 
 #-------------------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------------
@@ -85,11 +83,12 @@ client.remove_command( 'help' )
 #------------------------------------------------------------------------------------------------------------- 
 #-------------------------------------------------------------------------------------------------------------
 
+theme_color = 48,52,52
 bot_name=settings['bot_name']
 bot_version=settings['curr_version']
 bot_prefix=settings['prefix']
 bot_owner=settings['owner']
-bot_color=discord.Color.from_rgb(settings['theme'])
+bot_color=discord.Color.from_rgb(48,52,52)#discord.Color.from_rgb(49,223,232)
 bot_lang='`RU` :flag_ru:'
 bot_site=settings['support_site']
 bot_support=settings['support_server']
@@ -103,6 +102,21 @@ date_format=settings['date_format']
 ъ="ъ"
 
 #------------------------------------------------------------------------------------------------------------- 
+#------------------------------------------статус-на-телефоне-------------------------------------------------
+
+class MyDiscordWebSocket(DiscordWebSocket):
+
+    async def send_as_json(self, data):
+        if data.get('op') == self.IDENTIFY:
+            if data.get('d', {}).get('properties', {}).get('$browser') is not None:
+                data['d']['properties']['$browser'] = 'Discord Android'
+                data['d']['properties']['$device'] = 'Discord Android'
+        await super().send_as_json(data)
+
+
+DiscordWebSocket.from_client = MyDiscordWebSocket.from_client
+
+#-------------------------------------------------------------------------------------------------------------
 #-------------------------------------------------erorr-------------------------------------------------------
 
 @client.event
@@ -158,6 +172,339 @@ async def on_guild_join(guild):
         await user.send(embed=embed_link)
 
 #-------------------------------------------------------------------------------------------------------------
+#-------------------------------------------prefix------------------------------------------------------------
+
+@client.command()
+async def prefix(ctx, *, prefix):
+    embed = discord.Embed(title="Сменить префикс", description=f"Префикс `{prefix}` не доступен, попробуйте другой.", color=bot_color)
+    embed.timestamp = datetime.datetime.utcnow()
+    embed.set_footer(text=f'{ctx.author.name} \u200b')
+    await ctx.reply(embed=embed)
+
+class lang(discord.ui.Select):
+    def __init__(self):
+
+        options = [
+            discord.SelectOption(label="Русский", description = "Установить Русский язык", emoji = '🇷🇺', value="Русский"),
+            discord.SelectOption(label="Украинский", description = "Встановити Українську мову", emoji = '🇺🇦', value="Украинский"),
+            discord.SelectOption(label="Английский", description = "Install English language", emoji = '🇬🇧', value="Английский"),
+            discord.SelectOption(label="Испанский", description = "Instalar Español idioma", emoji = '🇪🇸', value = "Испанский"),
+            discord.SelectOption(label="Итальянский", description = "Instalar idioma Italiano", emoji = '🇮🇹', value = "Итальянский"),
+            discord.SelectOption(label="Японский", description = "日本語を言語設定する", emoji = '🇯🇵', value = "Японсий"),
+            discord.SelectOption(label="Кыргызский", description = "Кыргыз тилин кой", emoji = '🇰🇬', value = "Кыргызский"),
+        ]
+
+        super().__init__(placeholder='Выбери язык', min_values=1, max_values=1, options=options)
+
+    async def callback(self, interaction: discord.Interaction):
+        if self.values[0] == "Русский":
+            embed = discord.Embed(title="Русский язык", description=f"Данный язык уже стоит, попробуйте другой.", color=bot_color)
+            embed.timestamp = datetime.datetime.utcnow()
+            embed.set_footer(text=f'{interaction.user.name} \u200b')
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        elif self.values[0] == "Украинский":
+            embed = discord.Embed(title="Украинский язык", description=f'Данный язык не доступен.', colour = bot_color)
+            embed.timestamp = datetime.datetime.utcnow()
+            embed.set_footer(text=f'{interaction.user.name} \u200b')
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        if self.values[0] == "Английский":
+            embed = discord.Embed(title="Английский язык", description=f"Данный язык не доступен.", color=bot_color)
+            embed.timestamp = datetime.datetime.utcnow()
+            embed.set_footer(text=f'{interaction.user.name} \u200b')
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        elif self.values[0] == "Испанский":
+            embed = discord.Embed(title="Испанский язык", description=f'Данный язык не доступен.', colour = bot_color)
+            embed.timestamp = datetime.datetime.utcnow()
+            embed.set_footer(text=f'{interaction.user.name} \u200b')
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        if self.values[0] == "Итальянский":
+            embed = discord.Embed(title="Итальянский язык", description=f"Данный язык не доступен.", color=bot_color)
+            embed.timestamp = datetime.datetime.utcnow()
+            embed.set_footer(text=f'{interaction.user.name} \u200b')
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        elif self.values[0] == "Японский":
+            embed = discord.Embed(title="Японский язык", description=f'Данный язык не доступен.', colour = bot_color)
+            embed.timestamp = datetime.datetime.utcnow()
+            embed.set_footer(text=f'{interaction.user.name} \u200b')
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+        
+        if self.values[0] == "Кыргызский":
+            embed = discord.Embed(title="Кыргызский язык", description=f"Данный язык не доступен.", color=bot_color)
+            embed.timestamp = datetime.datetime.utcnow()
+            embed.set_footer(text=f'{interaction.user.name} \u200b')
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+class DropdownView_Lang(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+
+        self.add_item(lang())
+
+@client.command(aliases=["lang"])
+async def language(ctx):
+    embed = discord.Embed(title=":globe_with_meridians: Сменить язык", description=f"Пожалуйста, воспользуйся меню выбора, чтобы установить язык бота на этом сервере.", color=bot_color)
+    embed.timestamp = datetime.datetime.utcnow()
+    embed.set_footer(text=f'{ctx.author.name} \u200b')
+    view = DropdownView_Lang()
+    await ctx.reply(embed=embed, view=view)
+
+#-------------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------------
+
+class Help_1(discord.ui.Select):
+    def __init__(self):
+
+        options = [
+            discord.SelectOption(label="Основное", description = "Список основных команд", emoji = '📋', value="value1"),
+            discord.SelectOption(label="Экономика", description = "Команды для экономики", emoji = '💰', value="value2"),
+            discord.SelectOption(label="Модерация", description = "Команды модерации", emoji = '🛂', value="value3"),
+            discord.SelectOption(label="Музыка", description = "Музыкальные команды", emoji = '🎵', value = "value4"),
+            discord.SelectOption(label="Развлечения", description = "Мини-игры и т. п.", emoji = '🎲', value="value5"),
+            discord.SelectOption(label="Реакции", description="Различные реакции/эмоции", emoji="😀", value="value6"),
+            discord.SelectOption(label="Утилиты", description = "Утилиты(мини приложения) бота", emoji = '💾', value="value7"),
+            discord.SelectOption(label= "Настройки", description = "Только для администрации", emoji = '⚙', value = "value8"),
+        ]
+
+        super().__init__(placeholder='Помощь', min_values=1, max_values=1, options=options)
+
+    async def callback(self, interaction: discord.Interaction):
+        icon = str(interaction.guild.icon.url)
+        if self.values[0] == "value1":
+            embed = discord.Embed(title="Основные команды 📋", description=f'`{settings["prefix"]}time` - узнать время\n`{settings["prefix"]}avatar` - получить аватарку\n`{settings["prefix"]}say` - сказать от имени бота\n`{settings["prefix"]}voting` - начать голосование\n`{settings["prefix"]}ball` - магический шар\n`{settings["prefix"]}gay` - тест на гея', color=bot_color)
+            embed.set_thumbnail(url=icon)
+            embed.timestamp = datetime.datetime.utcnow()
+            embed.set_footer(text=f'{interaction.user.name} \u200b')
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        elif self.values[0] == "value2":
+            embed = discord.Embed(title="Экономика 💰", description=f'`{settings["prefix"]}balance` - посмотреть баланс\n`{settings["prefix"]}profile` - посмотреть профиль\n`{settings["prefix"]}deposit` - положить депозит в банк\n`{settings["prefix"]}withdraw` - забрать депозит с банка\n`{settings["prefix"]}pay` перевести деньги пользователю\n`{settings["prefix"]}work` - работать\n`{settings["prefix"]}shop` - открыть магазин\n`{settings["prefix"]}add_shop` - добавить в магазин\n`{settings["prefix"]}remove_shop` - убрать из магазина', colour = bot_color)
+            embed.set_thumbnail(url=icon)
+            embed.timestamp = datetime.datetime.utcnow()
+            embed.set_footer(text=f'{interaction.user.name} \u200b')
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        if self.values[0] == "value3":
+            embed = discord.Embed(title="Модерация 🛂", description=f'`{settings["prefix"]}clear` - очистка сообщений\n`{settings["prefix"]}mute` - заглушить пользователя\n`{settings["prefix"]}unmute` - размутить пользователя\n`{settings["prefix"]}kick` - выгнать пользователя\n`{settings["prefix"]}ban` - забанить пользователя\n`{settings["prefix"]}niсk` - сменить ник пользователю\n`{settings["prefix"]}create` - создать', colour = bot_color)
+            embed.set_thumbnail(url=icon)
+            embed.timestamp = datetime.datetime.utcnow()
+            embed.set_footer(text=f'{interaction.user.name} \u200b')
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        elif self.values[0] == "value4":
+            embed = discord.Embed(title="Музыка 🎵 (BETA)", description=f'`{settings["prefix"]}join` - пригласить бота к голосовому чату\n`{settings["prefix"]}leave` - выгнать бота из голосового чата\n`{settings["prefix"]}play` - начать проигрывание\n`{settings["prefix"]}pause` - поставить на паузу\n`{settings["prefix"]}resume` - возобновить произведение\n`{settings["prefix"]}stop` - остановить проигрывание и выгнать бота', colour = bot_color)
+            embed.set_thumbnail(url=icon)
+            embed.timestamp = datetime.datetime.utcnow()
+            embed.set_footer(text=f'{interaction.user.name} \u200b')
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        if self.values[0] == "value5":
+            embed = discord.Embed(title="Развлечения 🎲", description=f'`{settings["prefix"]}achievement` - создать очивку\n`{settings["prefix"]}joke` - Анекдоты\n`{settings["prefix"]}ball` - магический шар\n`{settings["prefix"]}gay` - тест на гея\n`{settings["prefix"]}love` - измеритель любви\n`{settings["prefix"]}fake` - фейк\n`{settings["prefix"]}cube` - подкинуть игральную кость\n`{settings["prefix"]}draw` - рисование\n**🎮 Мини-игры**\n`{settings["prefix"]}tictactoe` - крестики нолики\n`{settings["prefix"]}casino` - казино', colour = bot_color)
+            embed.set_thumbnail(url=icon)
+            embed.timestamp = datetime.datetime.utcnow()
+            embed.set_footer(text=f'{interaction.user.name} \u200b')
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        elif self.values[0] == "value6":
+            embed = discord.Embed(title="Реакции/Эмоции 😀", description=f'`{settings["prefix"]}bite` - укусить\n`{settings["prefix"]}caress` - ласкать\n`{settings["prefix"]}confuse` - засмущаться\n`{settings["prefix"]}cry` - плакать\n`{settings["prefix"]}dance` - танцевать\n`{settings["prefix"]}suicide` - суицид\n`{settings["prefix"]}dead_inside` - 1000-7 я умер прости...\n`{settings["prefix"]}drink` - пить\n`{settings["prefix"]}eat` - кушать\n`{settings["prefix"]}false` - отказать\n`{settings["prefix"]}hit` - ударить\n`{settings["prefix"]}hug` - обнять\n`{settings["prefix"]}joy` - радоваться\n`{settings["prefix"]}kiss` - поцеловаться\n`{settings["prefix"]}laugh` - смеяться\n`{settings["prefix"]}lick` - лизать\n`{settings["prefix"]}lover` - признаться в любви\n`{settings["prefix"]}miss` - скучать\n`{settings["prefix"]}pat` - погладить\n`{settings["prefix"]}poke` - тыкнуть\n`{settings["prefix"]}rap` - вызвать на рэп батл\n`{settings["prefix"]}resurrected` - восреснуть\n`{settings["prefix"]}run` - бежать\n`{settings["prefix"]}sad` - грустить\n`{settings["prefix"]}sex` - выебать\n`{settings["prefix"]}shock` - шок\n`{settings["prefix"]}shot` - выстрельнуть\n`{settings["prefix"]}slap` - пощечина\n`{settings["prefix"]}slit` - щелбан\n`{settings["prefix"]}sleep` - спать\n`{settings["prefix"]}smoke` - курить\n`{settings["prefix"]}true` - cогласится\n', colour = bot_color)
+            embed.set_thumbnail(url=icon)
+            embed.timestamp = datetime.datetime.utcnow()
+            embed.set_footer(text=f'{interaction.user.name} \u200b')
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        if self.values[0] == "value7":
+            embed = discord.Embed(title="Утилиты 💾", description=f'`{settings["prefix"]}anime` - поиск аниме\n`{settings["prefix"]}ticket` - тикеты\n`{settings["prefix"]}giveaway` - розыгрыш\n`{settings["prefix"]}timer` - таймер\n`{settings["prefix"]}random` - рандомное число\n`{settings["prefix"]}info` - получить информацию\n`{settings["prefix"]}qrcode` - сделать QRcode\n`{settings["prefix"]}base64` - декодер base64\n`{settings["prefix"]}emoji` - инфо о эмодзи\n`{settings["prefix"]}eagle-tails` - орёл и решка\n**:chains: Акаунты**\n`{settings["prefix"]}wot_blitz` - посмотреть статистику акаунта WoTb', color=bot_color)
+            embed.set_thumbnail(url=icon)
+            embed.timestamp = datetime.datetime.utcnow()
+            embed.set_footer(text=f'{interaction.user.name} \u200b')
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        elif self.values[0] == "value8":
+            embed = discord.Embed(title="Настройки ⚙", description=f'`{settings["prefix"]}prefix` - поменять префикс боту\n`{settings["prefix"]}language` - сменить язык бота', color=bot_color)
+            embed.set_thumbnail(url=icon)
+            embed.timestamp = datetime.datetime.utcnow()
+            embed.set_footer(text=f'{interaction.user.name} \u200b')
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+class Help_2(discord.ui.Select):
+    def __init__(self):
+
+        options = [
+            discord.SelectOption(label="У меня есть вопросы", description = "Связатся с поддержкой", emoji = '⁉', value="value_2"),
+            discord.SelectOption(label="Я нашёл ошибку", description = "Расскажите об найденных ошибках", emoji = '⚠', value="value_3"),
+            discord.SelectOption(label="Ваш бот помойка", description = "Оставть негативный отзыв", emoji = '🤡', value="value_4"),
+        ]
+
+        super().__init__(placeholder='Обратная связь', min_values=1, max_values=1, options=options)
+
+    async def callback(self, interaction: discord.Interaction):
+
+        if self.values[0] == "value_2":
+            embed = discord.Embed(title="Обратная связь ⁉", description="Нажми на кнопку ниже что бы попасть на севрер поддержки", color=bot_color)
+            view = discord.ui.View()
+            button = discord.ui.Button(style=discord.ButtonStyle.gray, label="Поддержка", url=settings["support_server"], emoji="<:icon_info:973689785002651758>")
+            view.add_item(item=button)
+            embed.timestamp = datetime.datetime.utcnow()
+            embed.set_footer(text=f'{interaction.user.name} \u200b')
+            await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+
+        elif self.values[0] == "value_4":
+            embed = discord.Embed(title="Плохой отзыв 🤡", description=f"Ебало офни школьник ебаный <a:clown:969231366984192050>", color=bot_color)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+class DropdownView_Help(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+
+        self.add_item(Help_1())
+        self.add_item(Help_2())
+
+@client.group(invoke_without_command = True)
+async def help(ctx):
+    embed = discord.Embed(title="Информация", description=f'Привет я Arona мой префикс `{settings["prefix"]}`. Спасибо что добавили меня на этот сервер.\nЧто бы получить помощь по конкретной команде напиши `{settings["prefix"]}help [название]`\n\n<:status_offline:973548082111336458> - Бот отключён\n<:status_online:973547805069180948> - Бот перезапускается\n<:status_online_mobile:974001909381881916>, <:status_idle:973547681337184356>, <:status_streaming:973547511774056448> - Бот успешно работает\n<:status_dnd:973547976142258237> - Бот на тех-обслуживании (лучьше его не трогать)\n\n Основные команды\n`{settings["prefix"]}help` - получить помощь\n`{settings["prefix"]}news` - последние новости в изменениях бота\n`{settings["prefix"]}prefix` - смена префикса\n\n Статистика: ```md\n#Колчиество севреров обслуживаемых ботом: '+ str(len(client.guilds)) +'\n#Колчиество человек обслуживаемых ботом: '+ str(len(client.users)) +f'\n#Пинг: {round (client.latency * 1000)} ms\n```', color = bot_color)#{round (client.latency * 1000)}
+    embed.set_thumbnail(url = ctx.guild.icon.url)
+    embed.timestamp = datetime.datetime.utcnow()
+    embed.set_footer(text=f'{ctx.author.name} \u200b')
+    async with ctx.typing():
+        await asyncio.sleep(2)
+    view = DropdownView_Help()
+    await ctx.reply(embed=embed, view=view)
+
+@help.command(aliases=["information"])
+async def info(ctx):
+    embed = discord.Embed(title=f"Команда {settings['prefix']}info", description=f"Получить информацию.", color = bot_color)
+    embed.add_field(name="Основная информация", value=f"Псевдонимы: `information`\nВремя перезарядки: `5 секунд`\n Использование: `{settings['prefix']}info <type>`", inline=False)
+    embed.add_field(name="Пример №1", value=f"`info bot`\n Информация о боте `{settings['owner']}`.", inline=False)
+    embed.add_field(name="Пример №2", value=f"`info server`\n Информация о сервере.", inline=False)
+    embed.add_field(name="Пример №3", value=f"`info user`\n Информация участника сервера.", inline=False)
+    embed.add_field(name="<:icon_info:973689785002651758> Общая", value=f"Это команда общая, её может использовать каждый участник сервера.")
+    embed.timestamp = datetime.datetime.utcnow()
+    embed.set_footer(text=f'{ctx.author.name} \u200b')
+    await ctx.message.reply(embed=embed)
+
+@help.command(aliases=["picture"])
+async def avatar(ctx):
+    embed = discord.Embed(title=f"Команда {settings['prefix']}avatar", description=f"Получить информацию.", color = bot_color)
+    embed.add_field(name="Основная информация", value=f"Псевдонимы: `picture`\nВремя перезарядки: `5 секунд`\n Использование: `{settings['prefix']}info <type>`", inline=False)
+    embed.add_field(name="Необходимые права для бота", value=f"— Не заданы")
+    embed.add_field(name="Необходимые права для участника", value=f"— Не заданы")
+    embed.add_field(name="Пример №1", value=f"`avatar user`\n Аватар участника сервера.", inline=False)
+    embed.add_field(name="Пример №2", value=f"`avatar server`\n Аватарка этого сервера сервера.", inline=False)
+    embed.add_field(name="Пример №3", value=f"`avatar bot`\n Аватарка бота `{settings['owner']}`.", inline=False)
+    embed.add_field(name="<:icon_info:973689785002651758> Общая", value=f"Это команда общая, её может использовать каждый участник сервера.")
+    embed.timestamp = datetime.datetime.utcnow()
+    embed.set_footer(text=f'{ctx.author.name} \u200b')
+    await ctx.message.reply(embed=embed)
+
+@help.command(aliases=["clean", "purge", "nuke"])
+async def clear(ctx):
+    embed = discord.Embed(title=f"Команда {settings['prefix']}purge", description=f"Очистить сообщения в чате.", color = bot_color)
+    embed.add_field(name="Основная информация", value=f"Псевдонимы: `clean, clear, nuke`\nВремя перезарядки: `5 секунд`\n Использование: `{settings['prefix']}purge <filter> [argument] <amount>`", inline=False)
+    embed.add_field(name="Необходимые права для бота", value=f"— Управлять сообщениями")
+    embed.add_field(name="Необходимые права для участника", value=f"— Управлять сообщениями")
+    embed.add_field(name="Пример №1", value=f"`purge all 100`\nОчистит 100 возможных сообщений в канале.", inline=False)
+    embed.add_field(name=":warning: Модерация", value=f"Это команда модерации, доступная участникам сервера при определенных условиях.")
+    embed.timestamp = datetime.datetime.utcnow()
+    embed.set_footer(text=f'{ctx.author.name} \u200b')
+    await ctx.message.reply(embed=embed)
+
+@help.command(aliases=["make"])
+async def create(ctx):
+    embed = discord.Embed(title=f"Команда {settings['prefix']}create', description=f' Cоздать чат.", color = bot_color)
+    embed.add_field(name="Основная информация", value=f"Псевдонимы: `make`\n Время перезарядки: `5 секунд`\n Использование: `{settings['prefix']}create <type> [name]`", inline=False)
+    embed.add_field(name="Необходимые права для бота", value=f"— Управлять каналами")
+    embed.add_field(name="Необходимые права для участника", value=f"— Управлять каналами")
+    embed.add_field(name="Пример №1", value=f'`create text Курлык-Курлык`\n Создаст текстовый чат с названием "Курлык-Курлык".', inline=False)
+    embed.add_field(name="Пример №2", value=f'`create voice Общий`\n Создаст голосовой чат с названием "Общий".', inline=False)
+    embed.timestamp = datetime.datetime.utcnow()
+    embed.set_footer(text=f'{ctx.author.name} \u200b')
+    await ctx.message.reply(embed=embed)
+
+@help.command(aliases=["фейк", "unreal", "tin"])
+async def fake(ctx):
+    embed = discord.Embed(title=f"Команда {settings['prefix']}fake", description=f"Получить фейк.", color = bot_color)
+    embed.add_field(name="Основная информация", value=f"Псевдонимы: `unreal, tin`\n Время перезарядки: `5 секунд`\n Использование: `{settings['prefix']}fake <type>`", inline=False)
+    embed.add_field(name="Необходимые права для бота", value=f"— Не заданы")
+    embed.add_field(name="Необходимые права для участника", value=f"— Не заданы")
+    embed.add_field(name="Пример №1", value=f"`fake personality`\n Фейковая личности.", inline=False)
+    embed.add_field(name="Пример №2", value=f"`fake card`\n Фейковая кредитная карта.", inline=False)
+    embed.add_field(name="Пример №3", value=f"`fake nitro`\n Фейковое нитро.", inline=False)
+    embed.add_field(name="Пример №4", value=f"`fake boost`\n Фейковый буст сервера.", inline=False)
+    embed.add_field(name="<:icon_info:973689785002651758> Общая", value=f"Это команда общая, её может использовать каждый участник сервера.")
+    embed.timestamp = datetime.datetime.utcnow()
+    embed.set_footer(text=f'{ctx.author.name} \u200b')
+    await ctx.message.reply(embed=embed)
+
+@help.command(aliases=["paint", "palette"])
+async def darw(ctx):
+    embed = discord.Embed(title=f"Команда {settings['prefix']}darw", description=f"Рисовать картинки.", color = bot_color)
+    embed.add_field(name="Основная информация", value=f"Псевдонимы: `paint, palette`\n Время перезарядки: `5 секунд`\n Использование: `{settings['prefix']}darw <color>`", inline=False)
+    embed.add_field(name="Необходимые права для бота", value=f"— Не заданы")
+    embed.add_field(name="Необходимые права для участника", value=f"— Не заданы")
+    embed.add_field(name="Пример №1", value=f"`darw orange`\n оранжевый цвет [`🟧`].", inline=False)
+    embed.add_field(name="Пример №2", value=f"`darw red`\n красный цвет [`🟥`].", inline=False)
+    embed.add_field(name="Пример №3", value=f"`darw blue`\n синий цвет [`🟦`].", inline=False)
+    embed.add_field(name="Пример №4", value=f"`darw green`\n зелёный цвет [`🟩`].", inline=False)
+    embed.add_field(name="Пример №4", value=f"`darw white`\n белый цвет [`⬜`].", inline=False)
+    embed.add_field(name="<:icon_info:973689785002651758> Общая", value=f"Это команда общая, её может использовать каждый участник сервера.")
+    embed.timestamp = datetime.datetime.utcnow()
+    embed.set_footer(text=f'{ctx.author.name} \u200b')
+    await ctx.message.reply(embed=embed)
+
+@help.command(aliases=["декодер"])
+async def decoder(ctx):
+    embed = discord.Embed(title=f"Команда {settings['prefix']}decoder", description=f"Декодер.", color = bot_color)
+    embed.add_field(name="Основная информация", value=f"Псевдонимы: `Не заданы`\nВремя перезарядки: `5 секунд`\n Использование: `{settings['prefix']}decoder <type>`", inline=False)
+    embed.add_field(name="Необходимые права для бота", value=f"— Не заданы")
+    embed.add_field(name="Необходимые права для участника", value=f"— Не заданы")
+    embed.add_field(name="Пример №1", value=f"`decoder base64`\n Декодировка base64.", inline=False)
+    embed.add_field(name="<:icon_info:973689785002651758> Общая", value=f"Это команда общая, её может использовать каждый участник сервера.")
+    embed.timestamp = datetime.datetime.utcnow()
+    embed.set_footer(text=f'{ctx.author.name} \u200b')
+    await ctx.message.reply(embed=embed)
+
+@help.command(aliases=["кодер"])
+async def coder(ctx):
+    embed = discord.Embed(title=f"Команда {settings['prefix']}coder", description=f"Кодер.", color = bot_color)
+    embed.add_field(name="Основная информация", value=f"Псевдонимы: `Не заданы`\n Время перезарядки: `5 секунд`\n Использование: `{settings['prefix']}coder <type>`", inline=False)
+    embed.add_field(name="Необходимые права для бота", value=f"— Не заданы")
+    embed.add_field(name="Необходимые права для участника", value=f"— Не заданы")
+    embed.add_field(name="Пример №1", value=f"`coder base64`\n Декодировка base64.", inline=False)
+    embed.add_field(name="<:icon_info:973689785002651758> Общая", value=f"Это команда общая, её может использовать каждый участник сервера.")
+    embed.timestamp = datetime.datetime.utcnow()
+    embed.set_footer(text=f'{ctx.author.name} \u200b')
+    await ctx.message.reply(embed=embed)
+
+@help.command(aliases=["билет"])
+async def ticket(ctx):
+    embed = discord.Embed(title=f"Команда {settings['prefix']}ticket", description=f"Ticket.", color = bot_color)
+    embed.add_field(name="Основная информация", value=f"Псевдонимы: `Не заданы`\n Время перезарядки: `5 секунд`\n Использование: `{settings['prefix']}ticket <type>`", inline=False)
+    embed.add_field(name="Необходимые права для бота", value=f"— Упровление каналами")
+    embed.add_field(name="Необходимые права для участника", value=f"— Не заданы")
+    embed.add_field(name="Пример №1", value=f"`ticket create`\n Создание тикета.", inline=False)
+    embed.add_field(name="Пример №1", value=f"`ticket close`\n Закрытие тикета.", inline=False)
+    embed.add_field(name="<:icon_info:973689785002651758> Общая", value=f"Это команда общая, её может использовать каждый участник сервера.")
+    embed.timestamp = datetime.datetime.utcnow()
+    embed.set_footer(text=f'{ctx.author.name} \u200b')
+    await ctx.message.reply(embed=embed)
+
+@help.command(aliases=["розыгрыш"])
+async def giveaway(ctx):
+    embed = discord.Embed(title=f"Команда {settings['prefix']}giveaway", description=f"Розыгрыш.", color = bot_color)
+    embed.add_field(name="Основная информация", value=f"Псевдонимы: `Не заданы`\n Время перезарядки: `5 секунд`\n Использование: `{settings['prefix']}giveaway <time> [prize]`", inline=False)
+    embed.add_field(name="Необходимые права для бота", value=f"— Добавлять реакции")
+    embed.add_field(name="Необходимые права для участника", value=f"— Управление сервером")
+    embed.add_field(name="Пример №1", value=f"`giveaway 10m`\n Начать розыгрыш.", inline=False)
+    embed.add_field(name=":warning: Модерация", value=f"Это команда модерации, доступная участникам сервера при определенных условиях.")
+    embed.timestamp = datetime.datetime.utcnow()
+    embed.set_footer(text=f'{ctx.author.name} \u200b')
+    await ctx.message.reply(embed=embed)
+
+#-------------------------------------------------------------------------------------------------------------
 #-----------------------------------------последние-новости-бота----------------------------------------------
 
 @client.command()
@@ -181,6 +528,126 @@ async def invite(ctx):
     await ctx.reply(embed=embed, view=view)
 
 #-------------------------------------------------------------------------------------------------------------
+#-------------------------------------------------инфо--------------------------------------------------------
+
+@client.group(invoke_without_command = True, aliases=["information"])
+async def info(ctx):
+    await ctx.message.reply(f"{ctx.author.name}, тип информации не указан. Пожалуйста, вызовить команду помощи (`{bot_prefix}help info`)")
+
+#----------------------------------------------инфо-о-боте----------------------------------------------------
+
+@info.command()
+async def bot(ctx: commands.Context):
+    battery = psutil.sensors_battery()
+    percentbat = int(battery.percent)
+    cpu = psutil.cpu_percent()
+    mem = psutil.virtual_memory()
+    percentmem = int(mem.percent)
+
+    embed = discord.Embed(
+        color = bot_color,
+        title=f"Информация о {bot_name}",
+        description=f"Последняя актульная информация о {bot_name} представлена ниже",
+        )
+    embed.add_field(name="Основная информация:", value=f"Создатель:\n`{bot_owner}`\n Версия: `{bot_version}`\nЯП: `Python`")
+    embed.add_field(name="Система:", value=f"Пинг: `{round (client.latency * 1000)}` ms\n Система:\n`Windows 10`\nCPU: `{cpu}%`\n Память: `{percentmem}%`")
+    embed.add_field(name="Статисктика:", value="Серверов: `"+ str(len(client.guilds))+"`\n Пользователей:\n`"+ str(len(client.users)) +"`")
+    embed.add_field(name="Сервер поддержки:", value=f"[Сервер поддержки]({bot_support})")
+    embed.add_field(name="Добавь бота на сервер:", value=f"[Добавь бота на сервер]({bot_add})")
+    embed.set_thumbnail(url = client.user.avatar.url)
+    embed.timestamp = datetime.datetime.utcnow()
+    embed.set_footer(text=f'{ctx.author.name} \u200b')
+    await ctx.reply(embed=embed)
+
+#---------------------------------------------инфо-о-сервере--------------------------------------------------
+    
+@info.command()
+@commands.guild_only()
+async def server(ctx):
+    locale.setlocale(locale.LC_ALL, 'ru_RU')
+    name = str(ctx.guild.name)
+    description = str(ctx.guild.description)
+
+    owner = str(ctx.guild.owner)
+    #create_time = (ctx.guild.created_at.strftime(date_format))
+    epoch_created_at = int(dt.mktime(ctx.guild.created_at.timetuple()))
+    id = str(ctx.guild.id)
+    #region = str(ctx.guild_region)
+    memberCount = str(ctx.guild.member_count)
+
+    textCount = len(ctx.guild.text_channels)
+    voiceCount = len(ctx.guild.voice_channels)
+    channelsCount = len(ctx.guild.text_channels + ctx.guild.voice_channels)
+
+    icon = str(ctx.guild.icon.url)
+
+    embed = discord.Embed(
+        title=name,
+        description=description,
+        color=bot_color
+    )
+    embed.set_thumbnail(url=icon)
+    embed.add_field(name="Создатель:", value=owner, inline=True)
+    embed.add_field(name="Создан:", value=f"<t:{epoch_created_at}>(<t:{epoch_created_at}:R>)", inline=True)
+    embed.add_field(name="ID сервера:", value=id, inline=True)
+    #embed.add_field(name="Регион сервера:", value=region, inline=True)
+    embed.add_field(name="Уастников:", value=memberCount, inline=True)
+    embed.add_field(name="Текстовых чатов:", value=textCount, inline=True)
+    embed.add_field(name="Голосовых чатов:", value=voiceCount, inline=True)
+    embed.add_field(name="Всего чатов:", value=channelsCount, inline=True)
+    if ctx.guild.banner:
+        embed.add_image(url=ctx.guild.banner.url)
+    embed.timestamp = datetime.datetime.utcnow()
+    embed.set_footer(text=f'{ctx.author.name} \u200b')
+    await ctx.reply(embed=embed)
+
+#--------------------------------------инфо-о-пользователе--------------------------------------------------
+    
+@info.command()
+async def user(ctx, *, user: discord.Member = None): # b'\xfc'
+    if user is None:
+        user = ctx.author      
+    locale.setlocale(locale.LC_ALL, 'ru_RU')
+    embed = discord.Embed(color=bot_color)
+    embed.set_thumbnail(url=user.avatar.url)#name=str(user),
+    t = user.status
+    if t == discord.Status.online:
+        d = "<:status_online:973547805069180948> В сети"
+
+    t = user.status
+    if t == discord.Status.offline:
+        d = "<:status_offline:973548082111336458> Не в сети"
+
+    t = user.status
+    if t == discord.Status.idle:
+        d = "<:status_idle:973547681337184356> Не активен"
+
+    t = user.status
+    if t == discord.Status.dnd:
+        d = "<:status_dnd:973547976142258237>  Не беспокоить"
+    embed.add_field(name="Активность:", value=d)
+    embed.add_field(name="Статус:", value=user.activity)
+    members = sorted(ctx.guild.members, key=lambda m: m.joined_at)
+    embed.add_field(name="Позиция", value=str(members.index(user)+1))
+    epoch_joined_at = int(dt.mktime(user.joined_at.timetuple()))
+    epoch_created_at = int(dt.mktime(user.created_at.timetuple()))
+    embed.add_field(name="Присоединился", value=f"<t:{epoch_joined_at}>(<t:{epoch_joined_at}:R>)")
+    embed.add_field(name="Зарегистрирован", value=f"<t:{epoch_created_at}>(<t:{epoch_created_at}:R>)")
+    if len(user.roles) > 1:
+        role_string = ' '.join([r.mention for r in user.roles][1:])
+        embed.add_field(name="Роли [{}]".format(len(user.roles)-1), value=role_string, inline=False)
+    perm_string = ', '.join([str(p[0]).replace("_", " ").title() for p in user.guild_permissions if p[1]])
+    embed.add_field(name="Разрешения на сервере", value=perm_string, inline=False)
+    #embed.set_image(user.banner_url)
+    embed.timestamp = datetime.datetime.utcnow()
+    if user.banner:
+        member = await client.fetch_user(user.id)
+        banner_url = member.banner.url
+        embed.set_image(url=banner_url)
+    embed.set_footer(text='ID: ' + str(user.id) + f'\n\n{ctx.author.name} \u200b')
+    return await ctx.reply(embed=embed)
+
+#-------------------------------------------------------------------------------------------------------------
 #----------------------------------------добавить-бота-на-сервер----------------------------------------------
 
 @client.command()
@@ -191,8 +658,7 @@ async def addbot(ctx):
         description=f"\n\n[Добавить бота на сервер]({bot_add}) ",
         )
   embed.set_thumbnail(url = client.user.avatar.url)
-  embed.timestamp = datetime.datetime.utcnow()
-  embed.set_footer(text=f'{ctx.author.name} \u200b')
+  embed.set_footer(text = f'{bot_owner} © {year} Все права защищены')
   await ctx.reply(embed=embed)
 
 #-------------------------------------------------------------------------------------------------------------
@@ -248,6 +714,7 @@ async def voting(ctx, *, arg = None):
         await ctx.message.delete()
         await msg.add_reaction('👍') 
         await msg.add_reaction('👎')
+        await msg.add_reaction('🤡')
 
 #-------------------------------------------------------------------------------------------------------------
 #--------------------------------------изминение-ника---------------------------------------------------------
@@ -307,12 +774,6 @@ async def say(ctx, *, message):
     except:
         await ctx.send("Введите сообщение!")
 
-@client.command()
-async def embsay(ctx, *, message):#, color, gif
-  await ctx.message.delete()
-  embed = discord.Embed(description=message, colour = bot_color)#0x8A2BE2 !embsay werewr 0x8A2BE2 https://images-ext-1.discordapp.net/external/GYuNEswE3mP8mofMPeVg5wrKjQChZR43QBhAwh3cE5A/https/media.discordapp.net/attachments/867815327323783208/937442969806573638/36ce7f19e23442e11fc70ee146f614fc.gif
-  await ctx.send(embed=embed)
-
 #-------------------------------------------------------------------------------------------------------------
 #-------------------------------------------да----------------------------------------------------------------
 
@@ -342,7 +803,7 @@ async def false(ctx):
     await ctx.send(embed = embed)
 
 #-------------------------------------------------------------------------------------------------------------
-#-----------------------------------------аватарка------------------------------------------------------------
+#-----------------------------------аватарка-пользователя-----------------------------------------------------
 
 @client.group(invoke_without_command = True, aliases=["picture"])
 async def avatar(ctx):
@@ -394,7 +855,6 @@ async def kick(ctx, member: discord.Member, *, reason):
     await ctx.send(embed = embed)
     await member.send(f'Вы кикнуты по причине "{reason}"!')
     await member.kick( reason = reason)
-    #await ctx.send(f'Данный пользователь нарушил правила сервера и был забанен {member.mention }.')
 
 @kick.error
 async def clear_errorqw(ctx, error):
@@ -446,7 +906,6 @@ async def ban(ctx, member: discord.Member, *, reason):
     await ctx.send(embed = embed)
     await member.send(f'Вы забанены по причине "{reason}"!')
     await member.ban( reason = reason)
-    #await ctx.send(f'Данный пользователь нарушил правила сервера и был забанен {member.mention }.')
 
 @ban.error
 async def clear_errorqw(ctx, error):
@@ -510,6 +969,15 @@ async def clear_errorqw(ctx, error):
         embed.timestamp = datetime.datetime.utcnow()
         embed.set_footer(text=f'{ctx.author.name} \u200b')
         await ctx.send(embed = embed)
+
+"""@bot.command()
+async def mute(ctx, member: discord.Member, times, *, reason):
+   role = discord.utils.get(ctx.guild.roles, id = 'айди роли мута')
+   await member.add_roles(role)
+   
+   await asyncio.sleep(ms(times))
+
+   await member.remove_roles(role)"""
 
 async def timeout_user(*, user_id: int, guild_id: int, until):
     headers = {"Authorization": f"Bot {client.http.token}"}
@@ -622,6 +1090,7 @@ async def all(ctx, limit: int):
         await ctx.send(embed=embed)
         await ctx.message.delete()
 
+
 @client.group(invoke_without_command = True, aliases=["make"])
 @commands.has_permissions(manage_channels = True)
 async def create(ctx):
@@ -652,7 +1121,7 @@ async def voice(ctx, *, voice_name):
     await ctx.message.delete()
 
 #-------------------------------------------------------------------------------------------------------------
-#----------------------------------------------NSFW-----------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------------
 
 
 @client.command(pass_context=True)
@@ -682,7 +1151,7 @@ async def cat(ctx):
             embed.set_image(url=res['data']['children'] [random.randint(0, 25)]['data']['url'])
             await ctx.reply(embed=embed)
 
-#-------------------------------------рандомная-собака---------------------------------------------------------
+#-------------------------------------рандомная-сучка---------------------------------------------------------
 
 @client.command(pass_context=True)
 async def dog(ctx):
@@ -1142,16 +1611,10 @@ print(f"[BOT {timestamp}] Подключение к DataBase")
 @client.event
 async def on_ready():
     while True:
-        await client.change_presence(status = discord.Status.online, activity = discord.Activity(type=discord.ActivityType.competing, name=f'{bot_prefix}help'))
-        await asyncio.sleep(12)
-        await client.change_presence(status = discord.Status.online, activity = discord.Activity(type=discord.ActivityType.competing, name=f'💛💙 Україна переможе'))
-        await asyncio.sleep(8)
-        await client.change_presence(status = discord.Status.online, activity = discord.Activity(type=discord.ActivityType.competing, name=f'#CloseTheSkyUkraine'))
-        await asyncio.sleep(8)
-        await client.change_presence(status = discord.Status.online, activity = discord.Activity(type=discord.ActivityType.competing, name=f'discord.gg/udycpczJWE'))
-        await asyncio.sleep(10)
-        await client.change_presence(status = discord.Status.online, activity = discord.Activity(type=discord.ActivityType.competing, name=f'чел снизу гей ↓'))
-        await asyncio.sleep(8)
+        await client.change_presence(status = discord.Status.dnd, activity = discord.Activity(type=discord.ActivityType.competing, name=f'Я супер бот!'))
+        await asyncio.sleep(5)
+        await client.change_presence(status = discord.Status.dnd, activity = discord.Activity(type=discord.ActivityType.competing, name=f'Меня сделал Ukraine Femboy#0001!'))
+        await asyncio.sleep(5)
 
 async def on_ready():
     await client.change_presence(status = discord.Status.dnd)
@@ -1245,9 +1708,9 @@ async def lvl(ctx, member: discord.Member = None):
         embed.set_footer(text=f'{ctx.author.name} \u200b')
         await ctx.reply(embed=embed)
 
-@client.command()
+@client.command(aliases = ['award'])
 @commands.has_permissions(administrator = True)
-async def award(ctx, member: discord.Member = None, amount: int = None):
+async def __award(ctx, member: discord.Member = None, amount: int = None):
     if member is None:
         await ctx.send(embed = discord.Embed (f"**{ctx.author}**, укажите пользователя, которому желаете выдать определенную сумму", color = bot_color))
     else:
@@ -1262,9 +1725,9 @@ async def award(ctx, member: discord.Member = None, amount: int = None):
             await ctx.message.add_reaction('✅')
  
  
-@client.command()
+@client.command(aliases = ['take'])
 @commands.has_permissions(administrator = True)
-async def take(ctx, member: discord.Member = None, amount = None):
+async def __take(ctx, member: discord.Member = None, amount = None):
     if member is None:
         await ctx.send(f"**{ctx.author}**, укажите пользователя, у которого желаете отнять сумму денег")
     else:
@@ -1276,7 +1739,7 @@ async def take(ctx, member: discord.Member = None, amount = None):
  
             await ctx.message.add_reaction('✅')
         elif int(amount) < 1:
-            await ctx.send(f"**{ctx.author}**, укажите сумму больше 1 :leaves:")
+            await ctx.send(f"**{ctx.author}**, укажите сумму больше 1 {bot_coin}")
         else:
             cursor.execute("UPDATE users SET cash = cash - {} WHERE id = {}".format(int(amount), member.id))
             connection.commit()
@@ -1341,6 +1804,8 @@ async def work(ctx):
 async def command_name_error(ctx, error):
     if isinstance(error, commands.CommandOnCooldown):
         retry_after = str(datetime.timedelta(seconds=error.retry_after)).split('.')[0]
+        #remaining_time = str(datetime.timedelta(seconds=int(error.retry_after)))
+        #epoch = int(dt.mktime(retry_after.timetuple()))
         embed = discord.Embed(title=f"Ты уже поработал!",description=f"Можешь отдыхнать ещё `{retry_after}` сек.", color=bot_color)#error.retry_after:.2f
         embed.timestamp = datetime.datetime.utcnow()
         embed.set_footer(text=f'{ctx.author.name} \u200b')
@@ -1444,6 +1909,35 @@ async def leaderboard(ctx):
  
     await ctx.send(embed = embed)
 
+@client.event
+async def on_message(message):
+    links = [
+       "discord.gg"
+    ]
+    if any(word in message.content.lower() for word in links):
+        await message.delete()
+        await message.channel.send("На сервере запрещено отправлять ссылки приглашения!")
+    else:
+        await client.process_commands(message)
+
+@client.event
+async def on_message(message):
+    links = [
+       "https://"
+    ]
+    if any(word in message.content.lower() for word in links):
+        await message.delete()
+        await message.channel.send("На сервере запрещено отправлять ссылки!")
+    else:
+        await client.process_commands(message)
+
+
+@client.command()
+async def divorce(ctx):
+            id_marry = cursor.execute("SELECT marry FROM users WHERE id = {}".format(ctx.author.id)).fetchone()[0]
+            cursor.execute("UPDATE users SET marry = marry - {} WHERE id = {}".format(id_marry, ctx.author.id))
+            cursor.execute("UPDATE users SET marry = marry - {} WHERE id = {}".format(ctx.author.id, id_marry))
+            connection.commit()
 
 @client.command(aliases = ['профиль'])
 async def profile(ctx, member: discord.Member = None):
@@ -2596,44 +3090,10 @@ async def anime(ctx, *, anime_name):
 #-------------------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------------
 
-@client.command()
-async def server_news(ctx, *, text):
-    embed = discord.Embed(title="Новости", description=text, color=bot_color )
-    embed.set_thumbnail(url=ctx.guild.icon.url)
-    embed.timestamp = datetime.datetime.utcnow()
-    embed.set_footer(text=f'Новости сервера \u200b') 
-    await ctx.message.delete()
-    await ctx.send(embed=embed)
-
-@client.command()
-async def server_rules(ctx, *, text):
-    embed = discord.Embed(title="**__Правила__**", description="```py\n"+text+"\n```", color=bot_color )
-    embed.set_thumbnail(url=ctx.guild.icon.url)
-    embed.timestamp = datetime.datetime.utcnow()
-    embed.set_footer(text=f'Правила сервера \u200b') 
-    await ctx.message.delete()
-    await ctx.send(embed=embed)
-
-@client.command()
-async def bot_news(ctx, *, text):
-    embed = discord.Embed(title=f"Новости {bot_name}", description=text, color=bot_color )
-    embed.set_thumbnail(url=client.user.avatar.url)
-    embed.timestamp = datetime.datetime.utcnow()
-    embed.set_footer(text=f'Новости {bot_name} \u200b') 
-    await ctx.message.delete()
-    await ctx.send(embed=embed)
-
-#-------------------------------------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------------------------------------
-
 time_window_milliseconds = 5000
 max_msg_per_window = 5
 author_msg_times = {}
-# Struct:
-# {
-#    "<author_id>": ["<msg_time", "<msg_time>", ...],
-#    "<author_id>": ["<msg_time"],
-# }
+
 
 hello_list = "Привет","привет","Эй халоп","эй халоп","Hi","hi","Hello","hello"
 
@@ -2647,30 +3107,26 @@ async def on_message(ctx):
     global author_msg_counts
 
     author_id = ctx.author.id
-    # Get current epoch time in milliseconds
+
     curr_time = datetime.datetime.now().timestamp() * 1000
 
-    # Make empty list for author id, if it does not exist
+
     if not author_msg_times.get(author_id, False):
         author_msg_times[author_id] = []
 
-    # Append the time of this message to the users list of message times
+   
     author_msg_times[author_id].append(curr_time)
 
-    # Find the beginning of our time window.
+
     expr_time = curr_time - time_window_milliseconds
 
-    # Find message times which occurred before the start of our window
     expired_msgs = [
         msg_time for msg_time in author_msg_times[author_id]
         if msg_time < expr_time
     ]
 
-    # Remove all the expired messages times from our list
     for msg_time in expired_msgs:
         author_msg_times[author_id].remove(msg_time)
-    # ^ note: we probably need to use a mutex here. Multiple threads
-    # might be trying to update this at the same time. Not sure though.
 
     if len(author_msg_times[author_id]) > max_msg_per_window:
         await ctx.channel.purge(limit=1)
@@ -2679,6 +3135,11 @@ async def on_message(ctx):
         await ctx.channel.send(embed=embed)
 
     await client.process_commands(ctx)
+
+
+#-------------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------------
+
 
 #-------------------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------------
@@ -2742,6 +3203,9 @@ def convert(time):
     return val * time_dict[unit]
 
 
+# ---------------------------------------------------------------------------
+
+
 @client.command()
 @commands.has_permissions(manage_guild=True)
 async def giveaway(ctx, time: str, *, prize: str):
@@ -2771,18 +3235,7 @@ async def giveaway(ctx, time: str, *, prize: str):
 #-------------------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------------
 
-@client.command()
-async def ben(ctx, time: str, *, prize: str):
-    time = convert(time)
-
-    msg = embed = discord.Embed(title="Бен", description=f"Выбери пробирку для реакции", color=bot_color)#ctx.guild.me.top_role.color
-    await ctx.send(embed=embed)
-    await msg.add_reaction("")
-
-#-------------------------------------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------------------------------------
-
-api_key = setting['openweathermap_api_key']
+api_key = "e4b8a8ed13b498f155093850c044167f"
 base_url = "http://api.openweathermap.org/data/2.5/weather?"
 
 @client.command()
@@ -2824,8 +3277,8 @@ async def weather(ctx, *, city: str):
 @client.event
 async def on_message_delete(message):
     if not message.author.bot:
-        if message.channel.guild.id == settings['server_logs']:
-            channel = client.get_channel(settings['channel_logs'])
+        if message.channel.guild.id == 974027749679321138:
+            channel = client.get_channel(974717302757032047) # в скобки вы ставите айди лог канала
             msg = f"**{message.author.mention}** удалил сообщение."
             embed = discord.Embed(color = bot_color, description = msg)
             embed.add_field(name = f"**Сообщение:**", value = f"{message.content}" + "\u200b")
@@ -2838,8 +3291,8 @@ async def on_message_delete(message):
 @client.event
 async def on_message_edit(message_before, message_after):
     if not message_before.author.bot:
-        if message_before.channel.guild.id == settings['server_logs']:
-            channel = client.get_channel(settings['channel_logs'])
+        if message_before.channel.guild.id == 974027749679321138:
+            channel = client.get_channel(974717302757032047) # в скобки вы ставите айди лог канала
             msg = f"**{message_before.author.mention}** отредактировал сообщение."
             embed = discord.Embed(color = bot_color, description = msg)
             embed.add_field(name = f"**Сообщение до:**", value = f"{message_before.content}" + "\u200b")
@@ -2853,13 +3306,25 @@ async def on_message_edit(message_before, message_after):
 #-------------------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------------
 
+"""@client.command()
+async def webhook(ctx):
+    async with aiohttp.ClientSession() as session:
+            webhook = Webhook.from_url('ссылка на вебхук', adapter=AsyncWebhookAdapter(session))
+            embed=discord.Embed(title="hello")
+            await webhook.send(embed=embed) # вставляйте сюда переменную с сообщением. Если эмбед то embed = название эмбеда, если сообщение то вставляйте сообщение"""
+
+#-------------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------------
+
 @client.command()
 async def python(ctx, *, code = None):
-	admins = settings['admins']
+	admins = [660176203755552768] # тут айди раз решённых людей через запятую
 	if ctx.author.id in admins:
 		if not code == None:
 			try:
 				exec(str(code))
+                #subprocess = subprocess.Popen("echo Hello World", shell=True, stdout=subprocess.PIPE)
+                #subprocess_return = subprocess.stdout.read()
 				embed = discord.Embed(
 					title = "Запуск кода",
 					description = f"```python> \n{code}```",
@@ -2875,304 +3340,9 @@ async def python(ctx, *, code = None):
 #-------------------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------------
 
-cogs = [ # Список cog'ов.
-    #"cogs.entartaiment",
-    #"cogs.moderation",
-    "cogs.tools"
-]
+print("Подключение к Discord...")
+client.run(settings['token'])
 
-btns=[
-    {
-        "label": "Добавить бота",
-        "url": f"https://discord.com/oauth2/authorize?client_id={settings['client_id']}&permissions={settings['perm_scope']}&scope=bot%20applications.commands"
-    },
-    {
-        "label": "Поддержка бота",
-        "url": settings['support_server']
-    }
-]
-try:
-    RPC = Presence(f"{settings['client_id']}") # Discord Rich Presence. Будет видно при запуске бота.
-except:
-    pass
-else:
-    try:
-        RPC.connect()
-    except:
-        pass
-    else:
-        RPC.update(
-            state=f"Бот запущен.",
-            details="Работа над ботом.",
-            start=dt.time(),
-            large_image="mad_cat_default",
-            large_text="MadBot - запущен",
-            buttons=btns
-        )
-
-class MyBot(commands.Bot):
-    def __init__(self):
-        super().__init__(command_prefix='mad.', intents=discord.Intents.all(), application_id=settings['app_id'])
-
-    async def setup_hook(self):
-        for ext in cogs:
-            try:
-                await self.load_extension(ext)
-            except:
-                print(f"Не удалось подключить {ext}!")
-        
-        await client.tree.sync()
-    
-    async def on_connect(self):
-        await client.change_presence(status=discord.Status.idle, activity=discord.Game(name="Перезагрузка..."))
-        print("Соединено! Авторизация...")
-
-    async def on_ready(self):
-        global started_at
-        server = client.get_guild(settings['server']) # Сервер логов.
-        logs = server.get_channel(settings['log_channel']) # Канал логов.
-        channel = client.get_channel(967484036127813713) # Канал "общения" мониторинга. Закомментируйте, если хотите.
-        for guild in client.guilds: # Проверка на нахождение в чёрном списке.
-            if guild.id in blacklist:
-                await guild.leave()
-                print(f"Бот вышел из {guild.name} ({guild.id})")
-        print(f"Авторизация успешна! {client.user} готов к работе!")
-        if round(client.latency, 3)*1000 < 90:
-            started_at -= 10800
-        embed = discord.Embed(title="Бот перезапущен!", color=discord.Color.red(), description=f"Пинг: `{int(round(client.latency, 3)*1000)}ms`\nВерсия: `{settings['curr_version']}`")
-        await logs.send(embed=embed)
-        await channel.send("OK") # Канал "общения" мониторинга. Закомментируйте, если хотите.
-
-    async def on_command_error(self, ctx: commands.Context, error: commands.CommandError):
-        if isinstance(error, commands.CommandNotFound):
-            return
-        await ctx.message.add_reaction("❌")
-        message = await ctx.message.reply(content=f"```\n{error}```")
-        channel = bot.get_channel(settings['log_channel'])
-        await channel.send(f'```\nOn message "{ctx.message.content}"\n\n{error}```')
-        print(error)
-        await sleep(30)
-        await message.delete()
-        await ctx.message.delete()
-    
-    async def on_guild_join(self, guild: discord.Guild):
-        if guild.id in blacklist or guild.owner.id in blacklist: # Проверка на чёрный список.
-            embed=discord.Embed(title="Ваш сервер либо вы сами занесён(-ы) в чёрный список бота!", color=discord.Color.red(), description=f"Владелец бота занёс ваш сервер либо вас в чёрный список! Бот покинет этот сервер. Если вы считаете, что это ошибка, обратитесь в поддержку: {settings['support_invite']}", timestamp=datetime.datetime.utcnow())
-            embed.set_thumbnail(url=guild.icon_url)
-            try:
-                await guild.owner.send(embed=embed)
-            except:
-                pass
-            await guild.leave()
-            print(f"Бот вышел из {guild.name} ({guild.id})")
-        else: 
-            await sleep(1)
-            embed = discord.Embed(title=f"Спасибо за добавление {client.user.name} на сервер {guild.name}", color=discord.Color.orange(), description=f"Перед использованием убедитесь, что слеш-команды включены у вас на сервере. Ваш сервер: `{len(bot.guilds)}-ый`.")
-            embed.add_field(name="Поддержка:", value=settings['support_invite'])
-            embed.set_thumbnail(url=client.user.avatar.url)
-            adder = None
-            try:
-                async for entry in guild.audit_logs(limit=5, action=discord.AuditLogAction.bot_add):
-                    if entry.target.id == client.user.id:
-                        adder = entry.user
-            except Forbidden:
-                adder = guild.owner
-                embed.set_footer(text="Бот написал вам, так как не смог уточнить, кто его добавил.")
-            try:
-                await adder.send(embed=embed)
-            except:
-                pass
-            embed = discord.Embed(title="Новый сервер!", color=discord.Color.green())
-            embed.add_field(name="Название:", value=f"`{guild.name}`")
-            embed.add_field(name="Владелец:", value=f"{guild.owner.mention}")
-            embed.add_field(name="ID сервера:", value=f"`{guild.id}`")
-            embed.add_field(name="Кол-во участников:", value=f"`{guild.member_count}`")
-            try:
-                embed.set_thumbnail(url=guild.icon.url)
-            except:
-                pass
-            log_channel = client.get_channel(settings['log_channel'])
-            await log_channel.send(embed=embed)
-            await client.tree.sync()
-    
-
-'''bot=MyBot()
-
-@client.tree.error
-async def on_error(interaction: discord.Interaction, error):
-    if isinstance(error, app_commands.CheckFailure):
-        embed = discord.Embed(title="Команда отключена!", color=discord.Color.red(), description="Владелец бота временно отключил эту команду! Попробуйте позже!")
-        return await interaction.response.send_message(embed=embed, ephemeral=True) 
-    embed = discord.Embed(title="Ошибка!", color=discord.Color.red(), description=f"Произошла неизвестная ошибка! Обратитесь в поддержку со скриншотом ошибки!\n```\n{error}```", timestamp=discord.utils.utcnow())
-    channel = client.get_channel(settings['log_channel'])
-    await channel.send(f"```\nOn command '{interaction.command.name}'\n{error}```")
-    try:
-        await interaction.response.send_message(embed=embed, ephemeral=True)
-    except discord.errors.InteractionResponded:
-        await interaction.edit_original_message(embeds=[embed])
-    print(error)'''
-
-'''@client.command()
-async def debug(ctx, argument, *, arg1 = None):
-    if ctx.author.id == settings['owner_id']:
-        if argument == "help":
-            message = await ctx.send(f"```\nservers - список серверов бота\nserverid [ID] - узнать о сервере при помощи его ID\nservername [NAME] - узнать о сервере по названию\ncreateinvite [ID] - создать инвайт на сервер\naddblacklist [ID] - добавить в ЧС\nremoveblacklist [ID] - убрать из ЧС\nverify [ID] - выдать галочку\nsupport [ID] - дать значок саппорта\nblacklist - список ЧСников\nleaveserver [ID] - покинуть сервер\nsync - синхронизация команд приложения\nchangename [NAME] - поменять ник бота\nstarttyping [SEC] - начать печатать\nsetavatar [AVA] - поменять аватар\nrestart - перезагрузка\ncreatetemplate - Ctrl+C Ctrl+V сервер\noffcmd - отключение команды\noncmd - включение команды\nreloadcogs - перезагрузка cog'ов\nloadcog - загрузка cog'а\nunloadcog - выгрузка cog'a```")
-            await message.delete(delay=60)
-        if argument == "servers":
-            servernames = []
-            gnames = " "
-            for guild in client.guilds:
-                servernames.append(guild.name)
-            for name in servernames:
-                gnames += f"`{name}`, "
-            await ctx.send(f"Servers: {gnames}", delete_after=120)
-        if argument == "serverid":
-            try:
-                guild = await client.fetch_guild(int(arg1))
-            except NotFound:
-                await ctx.message.add_reaction("❌")
-                await sleep(30)
-            await ctx.send(f"Name: {guild.name}, owner: {guild.owner.mention}, ID: {guild.id}", delete_after=120)
-        if argument == "servername":
-            for guild in client.guilds:
-                if str(arg1) == guild.name:
-                    await ctx.send(f"Name: {guild.name}, owner: {guild.owner.mention}, ID: {guild.id}", delete_after=120)
-        if argument == "createinvite":
-            for guild in client.guilds:
-                if guild.id == int(arg1):
-                    for channel in guild.text_channels:
-                        invite = await channel.create_invite(max_age=30, reason="Запрос")
-                        await ctx.send(invite.url, delete_after=30)
-                        return await ctx.message.delete()
-        if argument == "addblacklist":
-            blacklist.append(int(arg1))
-            guild = client.get_guild(int(arg1))
-            if guild != None:
-                embed=discord.Embed(title="Ваш сервер занесён в чёрный список бота!", color=discord.Color.red(), description=f"Владелец бота занёс ваш сервер в чёрный список! Бот покинет этот сервер. Если вы считаете, что это ошибка: обратитесь в поддержку: {settings['support_invite']}", timestamp=datetime.datetime.utcnow())
-                embed.set_thumbnail(url=guild.icon_url)
-                blacklist.append(guild.owner.id)
-                try:
-                    await guild.owner.send(embed=embed)
-                except:
-                    pass
-                await guild.leave()
-            await ctx.message.add_reaction("✅")
-            await sleep(30)
-            if int(arg1) == settings['owner_id']:
-                blacklist.remove(int(arg1))
-        if argument == "verify":
-            verified.append(int(arg1))
-            await ctx.message.add_reaction("✅")
-            await sleep(30)
-        if argument == "support":
-            supports.append(int(arg1))
-            await ctx.message.add_reaction("✅")
-            await sleep(30)
-        if argument == "blacklist":
-            await ctx.send(f"Banned: {blacklist}", delete_after=60)
-        if argument == "removeblacklist":
-            try:
-                blacklist.remove(int(arg1))
-            except ValueError:
-                await ctx.message.add_reaction("❌")
-            else:
-                await ctx.message.add_reaction("✅")
-            await sleep(30)
-        if argument == "leaveserver":
-            guild = client.get_guild(int(arg1))
-            await guild.leave()
-            await ctx.message.add_reaction("✅")
-            await sleep(30)
-        if argument == "sync":
-            async with ctx.channel.typing():    
-                await client.tree.sync()
-                await ctx.message.add_reaction("✅")
-            await sleep(30)
-        if argument == "changename":
-            await client.user.edit(username=arg1)
-            await ctx.message.add_reaction("✅")
-            await sleep(30)
-        if argument == "starttyping":
-            await ctx.message.delete()
-            async with ctx.channel.typing():
-                await sleep(int(arg1))
-        if argument == "createtemplate":
-            try:
-                template = await ctx.guild.create_template(name="Повiстка")
-            except:
-                template = ctx.guild.templates
-                for templ in template:
-                    template = templ
-                    break
-            owner = ctx.guild.get_member(settings['owner_id'])
-            await owner.send(template.url)
-        if argument == "restart":
-            await ctx.message.add_reaction("🔁")
-            await client.change_presence(status=discord.Status.idle, activity=discord.Game(name="Перезагрузка..."))
-            await sleep(2)
-            os.execv(sys.executable, ['python'] + sys.argv)
-        if argument == "setavatar":
-            bot_avatar = None
-            for attachment in ctx.message.attachments:
-                bot_avatar = await attachment.read()
-            await client.user.edit(avatar=bot_avatar)
-            await ctx.message.add_reaction("✅")
-            await sleep(30)
-        if argument == "stop":
-            await ctx.message.add_reaction("🔁")
-            await client.close()
-        if argument == "offcmd":
-            shutted_down.append(arg1)
-            await ctx.message.add_reaction("✅")
-            await sleep(30)
-        if argument == "oncmd":
-            shutted_down.remove(arg1)
-            await ctx.message.add_reaction("✅")
-            await sleep(30)
-        if argument == "reloadcogs":
-            for ext in cogs:
-                try:
-                    await client.reload_extension(ext)
-                except:
-                    print(f"Не удалось перезагрузить {ext}!")
-            await ctx.message.add_reaction("✅")
-            await sleep(30)
-        if argument == "loadcog":
-            try:
-                await client.load_extension(f'cogs.{arg1}')
-            except:
-                await ctx.message.add_reaction("❌")
-            else:
-                await ctx.message.add_reaction("✅")
-                await client.tree.sync()
-            await sleep(30)
-        if argument == "unloadcog":
-            try:
-                await client.unload_extension(f"cogs.{arg1}")
-            except:
-                await ctx.message.add_reaction("❌")
-            else:
-                await ctx.message.add_reaction("✅")
-                await client.tree.sync()
-            await sleep(30)
-    await ctx.message.delete()'''
-
-
-#-------------------------------------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------------------------------------
-
-#-------------------------------------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------------------------------------
-
-#-------------------------------------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------------------------------------
-
-#-------------------------------------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------------------------------------
-
-#-------------------------------------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------------------------------------
-
-if __name__ == "__main__":
+'''if __name__ == "__main__":
     print("Подключение к Discord...")
-    client.run(os.getenv('token'))
+    client.run(os.getenv('token'))'''
